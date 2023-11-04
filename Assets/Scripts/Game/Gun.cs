@@ -14,15 +14,15 @@ public class Gun : MonoBehaviour
     /// <summary>
     /// Prefab used for the bullets.
     /// </summary>
-    [ Header("Global") ]
+    [Header("Global")]
     public GameObject bulletPrefab;
-    
+
     /// <summary>
     /// Fire rate in bullets per minute.
     /// </summary>
-    [ Header("Gameplay") ]
+    [Header("Gameplay")]
     public float fireRate = 60.0f;
-    
+
     /// <summary>
     /// Can this gun fire?
     /// </summary>
@@ -32,22 +32,22 @@ public class Gun : MonoBehaviour
     /// Enable to switch the weapon to "shotgun mode".
     /// </summary>
     public bool shotgun = false;
-    
+
     /// <summary>
     /// Number of bullets in one shotgun spread.
     /// </summary>
     public int shotgunBullets = 6;
-    
+
     /// <summary>
     /// Shotgun spread angle in degrees.
     /// </summary>
     public float shotgunSpread = 30.0f;
-    
+
     /// <summary>
     /// Offset at which the bullet should be spawned.
     /// </summary>
     public float spawnOffset = 0.3f;
-    
+
     /// <summary>
     /// Transform used to direct the bullets.
     /// </summary>
@@ -57,7 +57,7 @@ public class Gun : MonoBehaviour
     /// Is the gun currently firing bullets?
     /// </summary>
     private bool mFiring = false;
-    
+
     /// <summary>
     /// Time accumulator representing time before next shot in seconds.
     /// </summary>
@@ -77,7 +77,7 @@ public class Gun : MonoBehaviour
     /// Storage for our blobs.
     /// </summary>
     private BlobAssetStore? mBlobAssetStore;
-    
+
     /// <summary>
     /// Entity prefab used as a base for each entity.
     /// </summary>
@@ -130,7 +130,7 @@ public class Gun : MonoBehaviour
     {
         // Cool down the weapon by the elapsed time.
         mCoolDown -= Time.deltaTime;
-        
+
         if (mFiring && fireEnabled)
         {
             // Number of seconds we should wait between bullet spawns.
@@ -139,7 +139,7 @@ public class Gun : MonoBehaviour
             while (mCoolDown <= 0.0f)
             { // Spawn corresponding number of bullets.
                 ShootGun(mBulletDirector);
-                
+
                 // "Heat up" the gun.
                 mCoolDown += secondsPerBullet;
             }
@@ -152,7 +152,7 @@ public class Gun : MonoBehaviour
     public void StartFiring()
     {
         // Start firing.
-        mFiring = true; 
+        mFiring = true;
         // Respect current cooldown, up to a single shot.
         mCoolDown = Math.Max(mCoolDown, 0.0f);
     }
@@ -174,12 +174,12 @@ public class Gun : MonoBehaviour
     {
         // Get the direction vector.
         var playerToTarget = target - transform.position;
-        
+
         // Allow only rotation in the XZ plane (play area).
         playerToTarget.z = 0.0f;
         playerToTarget.Normalize();
         float angle = Vector3.Angle(playerToTarget, Vector3.up) * -math.sign(playerToTarget.x);
-        
+
         // Rotate towards it.
         transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
     }
@@ -200,11 +200,26 @@ public class Gun : MonoBehaviour
          *  - Number / spread of shotgun bullets : shotgunBullets, shotgunSpread
          * Implement both single shot and shotgun (swap by pressing <SPACE> by default)
          */
-        
-        SpawnBullet(
-            new Vector3{ x = 0.0f, y = 0.0f, z = 0.0f }, 
-            Quaternion.Euler(0.0f, 0.0f, 0.0f)
-        );
+
+        if (!shotgun)
+        {
+            SpawnBullet(transform.position, transform.rotation);
+        }
+        else
+        {
+            ShotgunShot();
+        }
+    }
+
+    private void ShotgunShot()
+    {
+        float outerMostAngle = 35f;
+        Vector3 eulerAngles = transform.eulerAngles;
+        SpawnBullet(transform.position, transform.rotation * Quaternion.Euler(0, 0, outerMostAngle));
+        SpawnBullet(transform.position, transform.rotation * Quaternion.Euler(0, 0, outerMostAngle / 2));
+        SpawnBullet(transform.position, transform.rotation);
+        SpawnBullet(transform.position, transform.rotation * Quaternion.Euler(0, 0, -outerMostAngle / 2));
+        SpawnBullet(transform.position, transform.rotation * Quaternion.Euler(0, 0, -outerMostAngle));
     }
 
     /// <summary>
@@ -215,14 +230,14 @@ public class Gun : MonoBehaviour
         // Place the position using the director as a reference.
         var bulletPosition = director.position;
         var bulletRotation = Quaternion.Euler(director.eulerAngles);
-        
+
         // Offset the bullet's position.
         bulletPosition += (bulletRotation * Vector3.forward) * spawnOffset;
-        
+
         // Spawn the bullet.
         SpawnBullet(bulletPosition, bulletRotation);
     }
-    
+
     /// <summary>
     /// Spawn a single bullet using provided transform as a director.
     /// </summary>
@@ -231,7 +246,7 @@ public class Gun : MonoBehaviour
         if (mUseECS)
         { // Using ECS -> Spawn new entity.
             var bullet = mEntityManager.Instantiate(mBulletEntityPrefab);
-            mEntityManager.SetComponentData(bullet, new LocalTransform{ Position = position, Rotation = rotation });
+            mEntityManager.SetComponentData(bullet, new LocalTransform { Position = position, Rotation = rotation });
         }
         else
         { // Using default -> Spawn new GameObject.
@@ -241,7 +256,7 @@ public class Gun : MonoBehaviour
             bullet.transform.rotation = rotation * Quaternion.Euler(-90.0f, 0.0f, 0.0f);
         }
     }
-    
+
     /// <summary>
     /// Adjust the rate of fire.
     /// </summary>
@@ -251,7 +266,7 @@ public class Gun : MonoBehaviour
         // Clamp the values to be at least 1.0f.
         fireRate = Math.Max(fireRate + magnitude * 10.0f, 1.0f);
     }
-    
+
     /// <summary>
     /// Adjust the number of bullets per spread.
     /// </summary>
