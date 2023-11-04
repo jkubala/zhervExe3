@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.InputSystem;
@@ -14,13 +15,13 @@ using UnityEngine.UI;
 public class Settings : MonoBehaviour
 {
     // References to GameObjects within the scene.
-    [ Header("Game Objects") ]
+    [Header("Game Objects")]
 
     /// <summary>
     /// Reference to the main game manager.
     /// </summary>
     public GameObject gameManager;
-    
+
     /// <summary>
     /// List of all available players.
     /// </summary>
@@ -40,21 +41,21 @@ public class Settings : MonoBehaviour
     /// Root of the developer UI.
     /// </summary>
     public GameObject devUI;
-    
+
     [Header("Control Settings")]
     /// <summary>
     /// Attenuation for the smooth zoom.
     /// </summary>
     public float zoomAttune = 0.6f;
-    
+
     /// <summary>
     /// Cutoff value for the smooth zoom.
     /// </summary>
     public float zoomCutoff = 0.1f;
-    
+
     // Game Settings
-    [Header("Game Settings")] 
-    
+    [Header("Game Settings")]
+
     /// <summary>
     /// Use the Entity-Component-System?.
     /// </summary>
@@ -72,10 +73,10 @@ public class Settings : MonoBehaviour
     /// </summary>
     [HideInInspector]
     public float ecsSimplePhysicsRadius = 1.5f;
-    
+
     // World Settings
-    [ Header("World Settings") ]
-    
+    [Header("World Settings")]
+
     /// <summary>
     /// Mask for the objects in the ground layer.
     /// </summary>
@@ -84,20 +85,21 @@ public class Settings : MonoBehaviour
     /// <summary>
     /// Currently used GameManager component.
     /// </summary>
-    [CanBeNull] 
+    [CanBeNull]
     private GameManager mGameManager;
-    
+
     /// <summary>
     /// Singleton instance of the Settings.
     /// </summary>
     private static Settings sInstance;
-    
+
     /// <summary>
     /// Getter for the singleton Settings object.
     /// </summary>
     public static Settings Instance
     { get { return sInstance; } }
-    
+
+    private PlayerInput secondPlayer;
     /*
      * Task #3: Implement the local multiplayer
      * Useful functions and variables:
@@ -118,16 +120,10 @@ public class Settings : MonoBehaviour
         { Destroy(gameObject); }
         else
         { sInstance = this; }
-        
+
         if (gameManager)
         { mGameManager = gameManager.GetComponent<GameManager>(); }
     }
-    
-    /// <summary>
-    /// Called before the first frame update.
-    /// </summary>
-    void Start()
-    { }
 
     /// <summary>
     /// Add a new player to the current player list.
@@ -139,11 +135,11 @@ public class Settings : MonoBehaviour
         var playerIndex = players.FindIndex(x => x == player);
         if (playerIndex < 0)
         { players.Add(player); playerIndex = players.Count - 1; }
-        
+
         mGameManager?.UpdatePlayers();
         return playerIndex;
     }
-    
+
     /// <summary>
     /// Get index of an already added player.
     /// </summary>
@@ -152,7 +148,7 @@ public class Settings : MonoBehaviour
     ///          for players which were not added yet</returns>
     public int GetPlayerIndex(GameObject player)
     { return players.FindIndex(x => x == player); }
-    
+
     /// <summary>
     /// Remove a player from the current player list.
     /// </summary>
